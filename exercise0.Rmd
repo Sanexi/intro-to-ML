@@ -1,0 +1,140 @@
+---
+title: "Exercise set 0"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+library("reticulate")
+rmarkdown::render
+#knitr::knit_engines$set(python = reticulate::eng_python)
+#tinytex::install_tinytex()
+```
+
+
+## Problem 1
+
+### Task a
+
+Load the data set in x.csv:
+```{python}
+import pandas as pd
+
+x = pd.read_csv("x.csv")
+x
+```
+
+Finding the two variables having the largest variances:
+```{python}
+import matplotlib.pyplot as plt
+
+largest = x.var().idxmax()
+largest_df = x.pop(largest).to_frame()
+
+large = x.var().idxmax()
+large_df = x.pop(large).to_frame()
+
+new_x = large_df.join(largest_df)
+```
+
+Plotting variables:
+```{python}
+new_x.plot(x=large, y=largest, kind='scatter')
+plt.show()
+```
+
+
+## Problem 2
+
+### Task a
+
+B and A are both symmetric square matrices and their formulas are the same giving $B = \sum_{j=1}^n \lambda_jx_jx_j^T = A$. Hence their eigenvalues and eigenvectors are the same.
+
+### Task b
+
+$$\begin{vmatrix} 1 & 2 \\ 2 & 3.14159 \end{vmatrix}
+\rightarrow
+\begin{vmatrix} -\lambda+1 & 2 \\ 2 & -\lambda+3.14159 \end{vmatrix}$$
+With calculator:
+Eigenvalues:
+$\lambda_1 = \frac{\sqrt {205864077281} + 414159} {200000}$
+$\lambda_2 = -\frac{\sqrt {205864077281} + 414159} {200000}$
+Eigenvectors:
+$x_1 = \frac{\sqrt {205864077281} + 214159} {400000}*x_2$
+$x_2 = x_1$
+
+
+## Problem 3
+
+### Task a
+Expectation E has to be linear since probabilities are increasingly linear until reaching $P(\omega) = 1$.
+
+
+### Task b
+$\operatorname{Var}(X) = E[(X-\mu)^2] = E[x^2-2\mu x+\mu^2] = E[x^2]-E[\mu(2x-\mu)] = E[x^2]-\mu E[2x-\mu] = E[x^2]-u*(2u-u) = E[X^2]-E[X]^2$
+
+
+## Problem 4
+
+### Task a
+$$P(X \cap Y) = P(Y|X) P(X)$$
+Formula for conditional probability:
+$$P(X|Y) = \frac{P(X \cap Y)}{P(Y)} = \frac{P(Y|X) P(X)}{P(Y)}$$
+
+
+
+
+### Task b
+
+Allergic:
+
+| Y   | N   |
+|-----|-----|
+| 0.2 | 0.8 |
+
+Test result:
+
+| Allergic | Pos  | Neg  |
+|----------|------|------|
+| 1        | 0.85 | 0.15 |
+| 0        | 0.23 | 0.77 |
+
+Calculating ratio:
+$$R = \frac{P("Allergic"|"Pos")}{P("Not allergic"|"Pos")}
+= \frac{P("Pos"|"Allergic") P("Allergic")}
+{P("Pos"|"Not allergic") P("Not allergic")}
+= \frac{0.85*0.2}{0.23*0.8} = 0.17/0.184 = 0.92391...$$
+$$P("Allergic"|"Pos")
+= \frac{R}{1+R}
+= 0.4802259...$$
+Probability is about 48%
+
+
+## Problem 5
+
+### Task a
+$$f'(x) = 4ax^3+b = 0 $$
+$$f''(x_o) = 0, x_0 = \frac{-b}{4a} $$ (Minimum)
+Following:
+$$f_{min}=f(x_o) =\frac{3b}{4}(\frac{-b}{4a})^{1/3}+c $$
+
+### Task b
+Only condition is $a > 0$.
+
+
+## Problem 6
+
+### Task a
+```
+function fibonacci(n):
+  counter = 0
+  fib1 = 0
+  fib2 = 1
+  while counter < n:
+    counter = counter+1
+    print(fib1)
+    sum = fib1 + fib2
+    fib1 = n2
+    fib2 = sum
+```
+
+### Task b
+O(n)

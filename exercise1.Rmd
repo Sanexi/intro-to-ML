@@ -1,0 +1,74 @@
+---
+title: "Exercise set 0"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+library("reticulate")
+rmarkdown::render
+knitr::knit_engines$set(python = reticulate::eng_python)
+#tinytex::install_tinytex()
+```
+
+
+## Problem 1
+
+### Task a
+
+Load the data set in npf_train.csv:
+```{python}
+import pandas as pd
+
+npf = pd.read_csv("npf_train.csv")
+```
+
+### Task b
+
+Modify and look at dataframe:
+```{python}
+npf
+npf = npf.set_index("date")
+npf = npf.drop("id",axis=1)
+npf
+```
+
+### Task c
+
+Plotting:
+i.-iii.
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+npf.describe()
+npf = npf.drop("partlybad",axis=1)
+
+sns.pairplot(npf,hue="class4",vars=npf.columns[1:6],kind="reg")
+plt.show()
+
+npf.boxplot(column="RHIRGA84.mean",by="class4")
+plt.show()
+```
+
+iv.
+```{python}
+import numpy as np
+class2 = np.array(["nonevent", "event"])
+npf["class2"] = class2[(npf["class4"]!="nonevent").astype(int)]
+
+npf.boxplot(column="CS.mean", by="class2")
+plt.show()
+```
+
+v.
+```{python}
+sns.displot(npf, x="class4")
+plt.show()
+
+sns.displot(npf, x="class2")
+plt.show()
+```
+
+vi. Non-events and events occur the same amount. Among the events the most common event type is II, second is Ib and last Ia.
+
+
+## Problem 2
