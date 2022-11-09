@@ -46,7 +46,7 @@ plt.show()
 
 ### Task a
 
-B and A are both symmetric square matrices and their formulas are the same giving $B = \sum_{j=1}^n \lambda_jx_jx_j^T = A$. Hence their eigenvalues and eigenvectors are the same.
+Lets implement $x^T_ix_i$ into $$B = \sum_{j=1}^n \lambda_jx_jx_j^T = \sum_{j=1}^n \lambda_j$$. Now eigenvalues of A and B are the same: $$\sum_{j=1}^n \lambda_j = \lambda_i $$, where $i \in {1,...,n}$. Matrix A also has orthonormal eigenvectors, so A and B have the same eigenvalues and eigenvectors.
 
 ### Task b
 
@@ -65,7 +65,8 @@ $x_2 = x_1$
 ## Problem 3
 
 ### Task a
-Expectation E has to be linear since probabilities are increasingly linear until reaching $P(\omega) = 1$.
+Because X is a random variable let's define it to be $X = x_1+x_2$. Now we can prove that E is a linear operator:
+$$E[X] = \sum_{\omega \in \Omega} P(\omega)X(\omega) = \sum_{\omega \in \Omega} [x_1(\omega)+x_2(\omega)]P(\omega) = \sum_{\omega \in \Omega} [x_1(\omega)P(\omega)] + \sum_{\omega \in \Omega}[x_2(\omega)X(\omega)] = E[x_1] + E[x_2]$$
 
 
 ### Task b
