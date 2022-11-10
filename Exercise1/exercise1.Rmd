@@ -1,0 +1,252 @@
+---
+title: "Exercise set 0"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+library("reticulate")
+rmarkdown::render
+knitr::knit_engines$set(python = reticulate::eng_python)
+#tinytex::install_tinytex()
+```
+
+
+## Problem 1
+
+### Task a
+
+Load the data set in npf_train.csv:
+```{python}
+import pandas as pd
+
+npf = pd.read_csv("npf_train.csv")
+```
+
+### Task b
+
+Modify and look at dataframe:
+```{python}
+npf
+npf = npf.set_index("date")
+npf = npf.drop("id",axis=1)
+npf
+```
+
+### Task c
+
+Plotting:
+i.-iii.
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+npf.describe()
+npf = npf.drop("partlybad",axis=1)
+
+sns.pairplot(npf,hue="class4",vars=npf.columns[1:6],kind="reg")
+plt.show()
+
+npf.boxplot(column="RHIRGA84.mean",by="class4")
+plt.show()
+```
+
+iv.
+```{python}
+import numpy as np
+class2 = np.array(["nonevent", "event"])
+npf["class2"] = class2[(npf["class4"]!="nonevent").astype(int)]
+
+npf.boxplot(column="CS.mean", by="class2")
+plt.show()
+```
+
+v.
+```{python}
+sns.displot(npf, x="class4")
+plt.show()
+
+sns.displot(npf, x="class2")
+plt.show()
+```
+
+vi. Non-events and events occur the same amount. Among the events the most common event type is II, second is Ib and last Ia.
+
+
+## Problem 2
+
+### Task a
+
+As an extra model I used Ridge regression.
+
+```{python,eval=FALSE}
+import os
+from urllib.request import urlretrieve
+
+import numpy as np
+import pandas as pd
+
+from sklearn.dummy import DummyRegressor
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import mean_squared_error
+
+file = "Bias_correction_ucl.csv"
+
+nwp = pd.read_csv(file)
+nwp = nwp.drop(["Date", "Next_Tmin"], axis=1)
+nwp = nwp.dropna()
+
+#Downsample
+nwp, _ = train_test_split(
+    nwp, train_size=1000, random_state=42, stratify=nwp["station"]
+)
+
+#Splitting data to train and test
+X = nwp.drop(["Next_Tmax", "station"], axis=1)
+y = nwp["Next_Tmax"]
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, train_size=500, random_state=42, shuffle=True, stratify=nwp["station"]
+)
+
+models = [DummyRegressor(), LinearRegression(), SVR(), RandomForestRegressor(), Ridge()]
+res = pd.DataFrame(index=["dummy", "OLS", "SVR", "RF", "Ridge"])
+
+#Mean squared error function
+def loss(X_tr, y_tr, X_te, y_te, m):
+    return mean_squared_error(y_te, m.fit(X_tr, y_tr).predict(X_te), squared=False)
+
+#Losses and cross-validation
+res["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
+res["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+res["cv_10"] = [
+    -cross_val_score(
+        m, X_train, y_train, cv=10, scoring="neg_root_mean_squared_error"
+    ).mean()
+    for m in models
+]
+res["cv_1out"] = [
+    -cross_val_score(
+        m, X_train, y_train, cv=X_train.shape[0], scoring="neg_root_mean_squared_error"
+    ).mean()
+    for m in models
+]
+
+
+res
+```
+
+### Task b
+
+Random forest regressor is clearly the best in train, test and validation errors. Close second is Linear regression and Ridge. Ridge regression and linear regression are very similar algorithms and their scores are almost the same in all sets.
+RMSE on the training data is very similar to the RMSE on the test data. On random forest regressor the difference is, however, quite noticable, giving it's high complexity.
+CV error is very comparable to the error on the test set. CV error on leave_one_station_out is very noticably lower than 10-fold CV error.
+Given these observations the linear regression model is very efficient and low in complexity while Support vector regression is as inefficient as the dummy model. Random forest classifier seems very good from the training data, but test and cross-validation data gives us a bit more clearer view and the difference between it and the linear regression model is not too great. The main choice is going to be which of these regressors you use depending on what you value more, time or error.
+
+### Task c
+
+Leave-one-station-out cross-validation is cross-validation where you, instead of splitting the dataset into 5-10 parts you split the dataset into how many datapoints you have. Then validate the data compairing all datapoints to one datapoint, one at a time, going through the whole dataset. In Cho et al., the authors used this method to compare to the more common 5-10-fold cross-validation methods.
+
+
+## Problem 3
+
+### Task a
+
+```{python,eval=FALSE}
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+
+
+def create_dataset(n):
+  x = np.random.uniform(-3, 3, n)
+  e = np.random.normal(0, 0.4, n)
+  fx = 2-x+x**2
+  y = fx + e
+  df = pd.DataFrame(columns=["x", "y"])
+  df["x"] = x
+  df["y"] = y
+  return df
+  
+df = create_dataset(1020)
+df
+X = df["y"]
+y = df["x"]
+
+X, X_test, y, y_test = train_test_split(
+    X, y, train_size=20, random_state=42, shuffle=True
+)
+
+X_train, X_val, y_train, y_val = train_test_split(
+    X, y, train_size=10, random_state=42, shuffle=True
+)
+```
+
+### Task b
+
+```{python,eval=FALSE}
+import matplotlib.pyplot as plt
+
+polys = [1, 2, 3, 4, 8]
+models = []
+  
+for poly in polys:
+  fig, ax = plt.subplots()
+  ax.scatter(X_train, y_train)
+  
+  pf = np.polyfit(X_train, y_train, deg=poly)
+  models.append(pf)
+  
+  lin = np.linspace(-3, 3, num=256)
+  ax.plot(lin, np.polyval(pf, lin), color="k")
+  plt.show()
+
+```
+
+### Task c
+
+```{python,eval=FALSE}
+from sklearn.model_selection import cross_val_score
+
+def loss(X_tr, y_tr, X_te, y_te, m):
+  return mean_squared_error(y_te, np.polyval(m, X_te), squared=False)
+
+res = pd.DataFrame(columns=polys)
+
+res.loc["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
+res.loc["val"] = [loss(X_train, y_train, X_val, y_val, m) for m in models]
+res.loc["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+res
+```
+
+### Task d
+
+```{python,eval=FALSE}
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.datasets import make_regression
+
+X_train = pd.concat([X_train, X_val])
+y_train = pd.concat([y_train, y_val])
+X_r = X_train
+y_r = Y_train
+
+X_r, y_r = make_regression()
+
+cross_score = []
+for poly in polys:
+  model = make_pipeline(PolynomialFeatures(degree=poly), LinearRegression())
+  cross_score.append(-cross_val_score(model, X_r, y_r, cv=5).mean())
+
+res.loc["cv"] = [cross_score]
+
+models = []
+for poly in polys:
+  pf = np.polyfit(X_train, y_train, deg=poly)
+  models.append(pf)
+  
+res.loc["comb_test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+res
+```
