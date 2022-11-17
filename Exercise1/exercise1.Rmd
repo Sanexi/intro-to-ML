@@ -43,10 +43,8 @@ npf.describe()
 npf = npf.drop("partlybad",axis=1)
 
 sns.pairplot(npf,hue="class4",vars=npf.columns[1:6],kind="reg")
-plt.show()
 
 npf.boxplot(column="RHIRGA84.mean",by="class4")
-plt.show()
 ```
 
 iv.
@@ -56,16 +54,13 @@ class2 = np.array(["nonevent", "event"])
 npf["class2"] = class2[(npf["class4"]!="nonevent").astype(int)]
 
 npf.boxplot(column="CS.mean", by="class2")
-plt.show()
 ```
 
 v.
 ```{python}
 sns.displot(npf, x="class4")
-plt.show()
 
 sns.displot(npf, x="class2")
-plt.show()
 ```
 
 vi. Non-events and events occur the same amount. Among the events the most common event type is II, second is Ib and last Ia.
@@ -77,7 +72,7 @@ vi. Non-events and events occur the same amount. Among the events the most commo
 
 As an extra model I used Ridge regression.
 
-```{python,eval=FALSE}
+```{python}
 import os
 from urllib.request import urlretrieve
 
@@ -132,8 +127,8 @@ res["cv_1out"] = [
     for m in models
 ]
 
-
 res
+
 ```
 
 ### Task b
@@ -152,7 +147,7 @@ Leave-one-station-out cross-validation is cross-validation where you, instead of
 
 ### Task a
 
-```{python,eval=FALSE}
+```{python}
 import numpy as np
 import pandas as pd
 
@@ -170,9 +165,11 @@ def create_dataset(n):
   return df
   
 df = create_dataset(1020)
+
 df
-X = df["y"]
-y = df["x"]
+
+X = df["x"]
+y = df["y"]
 
 X, X_test, y, y_test = train_test_split(
     X, y, train_size=20, random_state=42, shuffle=True
@@ -181,11 +178,12 @@ X, X_test, y, y_test = train_test_split(
 X_train, X_val, y_train, y_val = train_test_split(
     X, y, train_size=10, random_state=42, shuffle=True
 )
+
 ```
 
 ### Task b
 
-```{python,eval=FALSE}
+```{python}
 import matplotlib.pyplot as plt
 
 polys = [1, 2, 3, 4, 8]
@@ -206,8 +204,9 @@ for poly in polys:
 
 ### Task c
 
-```{python,eval=FALSE}
+```{python}
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import mean_squared_error
 
 def loss(X_tr, y_tr, X_te, y_te, m):
   return mean_squared_error(y_te, np.polyval(m, X_te), squared=False)
@@ -217,36 +216,102 @@ res = pd.DataFrame(columns=polys)
 res.loc["train"] = [loss(X_train, y_train, X_train, y_train, m) for m in models]
 res.loc["val"] = [loss(X_train, y_train, X_val, y_val, m) for m in models]
 res.loc["test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+
 res
 ```
 
 ### Task d
 
-```{python,eval=FALSE}
+```{python}
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.datasets import make_regression
 
-X_train = pd.concat([X_train, X_val])
-y_train = pd.concat([y_train, y_val])
-X_r = X_train
-y_r = Y_train
+X_comb = pd.concat([X_train, X_val])
+y_comb = pd.concat([y_train, y_val])
 
-X_r, y_r = make_regression()
+X_poly = pd.DataFrame(X_comb)
 
 cross_score = []
 for poly in polys:
-  model = make_pipeline(PolynomialFeatures(degree=poly), LinearRegression())
-  cross_score.append(-cross_val_score(model, X_r, y_r, cv=5).mean())
+  linear = LinearRegression()
+  Xd = PolynomialFeatures(poly).fit_transform(X_poly)
+  cross_score.append(-cross_val_score(linear, Xd, y_comb, cv=5).mean())
 
-res.loc["cv"] = [cross_score]
+res.loc["cv"] = cross_score
 
-models = []
-for poly in polys:
-  pf = np.polyfit(X_train, y_train, deg=poly)
-  models.append(pf)
-  
-res.loc["comb_test"] = [loss(X_train, y_train, X_test, y_test, m) for m in models]
+
+res.loc["comb_test"] = [loss(X_comb, y_comb, X_test, y_test, m) for m in models]
 res
 ```
+
+### Task e
+
+Polynomial of 4 seems to be the winner in every category and would suit the model the best. Even if test set wouldn't be available.
+
+
+## Problem 4
+
+### Task a
+
+![Error curves](error_curves.png)
+
+- Squared bias: Average accuracy of the model increases when flexibility increases.
+- Variance: Variance on the other hand decreases as flexibility increases since these models will be more drastic in correlation to the training data.
+- Training error: Decreases since more flexible model can adjust to training set better.
+- Test error: First decreases but then increases since too flexible model starts making too drastic changes based on the training data.
+- Bayes error: Always constant. Just some noice.
+
+
+## Problem 5
+
+### Task a
+
+$$E[L_{test}] = E[\frac{1}{m}\sum_{i=1}^{m}(\bar{y}_i - \hat{\beta}^T{\bar x}_i)^2 ] = \frac{1}{m}\sum_{i=1}^{m}E [(\bar{y}_i - \hat{\beta}^T{\bar x}_i)^2 ] = \frac{1}{m}(E[(\bar{y}_1 - \hat{\beta}^T{\bar x}_1)^2] + ... + E[(\bar{y}_n - \hat{\beta}^T{\bar x}_n)^2]) = E[(\bar{y}_1 - \hat{\beta}^T{\bar x}_1)^2]$$
+
+### Task b
+
+To prove that estimate of $L_{test}$ is an unbiased estimate of the generalization error for the OLS regression, we have to prove that $$E[\frac{1}{m}\sum_{i=1}^{m}(\bar{y}_i - \hat{\beta}^T{x}_i)^2] = E[\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat{y}_i)^2 ]$$.
+From the modification we did to $L_{test}$ in task a we can see that $E[y_i] = E[y]\ \forall i$ and $\hat{\beta}^T{x}=\hat{y}$. From this we can state that the equation $$E[L_{test}] = E[(y-\hat{y}^2)]$$.
+
+### Task c
+
+We must prove: $$ E[\frac{1}{n}\sum_{i=1}^{n}(y_i-\hat{\beta}^T\bar{x}_i)^2] \leq E[\frac{1}{m}\sum_{i=1}^{m}(\bar{y}_i - \hat{\beta}^T\bar{x}_i)^2]$$
+
+The only term possible to affect this equation is $\hat{\beta}^T$. From Problem 4 task a we can see that the this term favors the training set; Because of $\hat{\beta}^T$ the loss is always less or equal to the test set. So $\hat{\beta}^T_{train} \leq \hat{\beta}^T_{test}$.
+
+### Task d
+
+The previous task is related to the generalization problem in machine learning since it means that the difference between test and train results has to be found between bias and variance so that the model is not too fitting to training data (overfitting) or too general (underfitting).
+
+
+
+
+
+## Problem 6
+
+### Task a
+
+```{python}
+import numpy as np
+import pandas as pd
+
+data = pd.read_csv("co2lite.csv")
+
+y_pred = [np.mean(data["FCO2"]) for i in data["FCO2"]]
+difference = data["FCO2"] - y_pred
+std = difference.std(ddof=1)
+t_value = (np.mean(difference))/(std/np.sqrt(len(difference)))
+
+np.mean(data["FCO2"])
+t_value
+std
+```
+
+With this few datapoints it's not yet possible to state that the true mean of FCO2 is non-zero.
+
+
+## Problem 7
+
+The beginning of this course has really hooked me in and it's starting to seem like it's my favourite course this far. I have learned and understood many of the beginning principles of machine learning and supervised learning. Bits of the math side is always hard but with time I will hopefully understand those as well. I have thought about including a bit of machine learning to my bachelor's thesis so this knowledge will be very useful.

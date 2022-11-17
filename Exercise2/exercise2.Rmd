@@ -1,0 +1,49 @@
+---
+title: "Exercise Set 2"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+library("reticulate")
+rmarkdown::render
+knitr::knit_engines$set(python = reticulate::eng_python)
+#tinytex::install_tinytex()
+```
+
+## Problem 1
+
+### Task a
+
+```{python, eval=FALSE}
+import math
+import pandas as pd
+from sklearn import linear_model
+
+spam_train = pd.read_csv("spam_train.csv")
+spam_test = pd.read_csv("spam_test.csv")
+
+clf = linear_model.LogisticRegression(penalty="l1", C=1/0.001, solver="saga", max_iter=2000)
+clf.fit(spam_train.iloc[:,:5],spam_train.iloc[:,5])
+
+print("Intercept", clf.intercept_[0])
+print("Coefficients:")
+for c, v in zip(spam_test.columns[:5], clf.coef_[0]):
+  print(c, v)
+
+phat_train = clf.predict_proba(spam_train.iloc[:,:5])[:,1]
+phat_test = clf.predict_proba(spam_test.iloc[:,:5])[:,1]
+
+print("Accuracy train:", phat_train.sum()/len(phat_train))
+print("Accuracy test:", phat_test.sum()/len(phat_test))
+
+per_train = 0
+for i in phat_train:
+  per_train += math.log(i)
+print("Perplexity train:", -per_train)
+
+per_test = 0
+for i in phat_test:
+  per_test += math.log(i)
+print("Perplexity test:", -per_test)
+```
+
+Convergence warning is due to hitting the iteration limit on the logistic regression model. By increasing iterations limit we can solve this warning.
