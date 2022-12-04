@@ -1,0 +1,373 @@
+---
+output:
+  pdf_document:
+    latex_engine: xelatex
+urlcolor: blue
+---
+
+# Machine Learning Guest Lectures
+
+In Exactum A111 on 9 December 2022 at 10:15-12
+
+We will have guest presentations by Vitus Besel and Jouni Seppänen, about 30 minutes each, after which there is a chance to ask questions from the speakers.
+
+-----
+
+**Vitus Besel:** Curation of Big Data for Atmospheric Science
+
+**Abstract:** As humanity moves into an age when Climate Change is a universal threat to all social, economical and ecological structures, an age when Machine Learning is able to achieve mindboggling results, it is only natural to use the Machine Learning to solve the problem of Climate Change. However, the path there consists of tiny steps and is not straightforward at all. The creation of a big data set of atmospheric molecules starts off with the creation of tenthousands of molecules, involves Quantum Chemistry Calculations, and can only be tackled using high-performance computing. Eventually, predicting molecular properties with Machine Learning models allows for a better understanding of cloud formation processes, which are crucial in understanding Climate Change.
+
+**About the speaker:** Vitus Besel, M.Sc., is a doctoral researcher in the field of atmospheric science at the University of Helsinki. As such he has also made himself a name as a science communicator, talking at the Night of Science Helsinki, winning poster prices at EAC, AAAC and Physics Day Helsinki conferences and winning the international DanceYourPhD contest 2021. His research mainly evolves around combining the tools of quantum chemistry, high-performance computing and machine learning for atmospheric science purposes.
+
+-----
+
+**Jouni Seppänen:** Experiences with machine learning in the industry
+
+**Abstract:** I will discuss various challenges related to and lessons learned in applying machine learning in non-academic settings after first getting a doctoral degree. Topics are expected to include some of data engineering, recommender systems, machine vision, information visualisation, language technologies, consulting skills, salesmanship, the realities of the public tender process, and finding and choosing a job. 
+
+**About the speaker:** Jouni got his doctorate in Computer and Information Science from TKK (now part of Aalto) in 2006. He has worked on customer data analysis at Xtract Ltd (since absorbed into Comptel and thence into Nokia), on machine vision in recycling robots at ZenRobotics Ltd (now bankrupt; operations sold to Terex Corporation), and is now employed as a senior consultant at Reaktor Innovations Oy, currently working with Yle News Lab on the future of journalism. He has owned small stakes in the various companies he has been employed by but has yet to see any meaningful payout, which would be prudent to keep in mind while listening to his career advice.
+
+
+\newpage
+
+# Exercise Set 3
+
+* Submit the answer via Moodle at the latest on **Tuesday**, 13 November 2022, at 23:59. 
+* You can answer anonymously or write your name on the answer sheet; your choice.
+* One person should complete the assignment, but discussions and joint-solving sessions with others are encouraged. Your final solution must, however, be your own. You are not allowed to copy ready-made solutions or solutions made by other students. You are permitted to use external sources, web searches included.
+* You can discuss the problems in the exercise workshop.
+* Your answer will be peer-reviewed by you and randomly selected other students.
+* The language of the assignments is English.
+* The submitted report should be in a single Portable Document Format (pdf) file.
+* Answer the problems in the correct order.
+* Read Moodle's general instructions and grading criteria before starting the problems.
+* Main source material: James et al., Chapter 12. Please feel to use other resources as well. "James et al." refers to James, Witten, Hastie, and Tibshirani, 2021. An Introduction to Statistical Learning with applications in R, 2nd edition. Springer.
+* Notice that you can submit your answer to Moodle well before the deadline and revise it until the deadline. Therefore: please submit your solution in advance after you have solved some problems! Due to the peer review process, we cannot grant extensions to the deadline. Even though the Moodle submission may occasionally remain open after 23:59, the submission system will eventually close. If you try to submit your answers late, you will **not** get any points (including peer-review points) from this Exercise Set. You have been warned.
+* Please double-check that the submitted pdf is appropriately formatted and, e.g., contains all figures. It is challenging to produce correctly formatted pdf files with Jupyter Notebooks: remember to check the created pdf. I recommend using R Markdown instead of Jupyter notebooks.
+* You can solve the problems at your own pace. However, we have given a suggested schedule below ("Do this after lecture X."). If you follow the plan, you can do the problems after we have covered the topics in class.
+
+
+\newpage
+## Problem 17
+
+*[9 points]*
+
+*Objectives: k-means loss and Lloyd's algorithm*
+
+In this problem, you will study the k-means algorithm (also known as Lloyd's algorithm). You should be able to do this problem with a pen and paper.
+
+### Task a
+
+For what kinds of tasks can we use the k-means algorithm? Explain the algorithm's *inputs* and *outputs*. How should you interpret the results?
+ 
+### Task b
+
+Define the objective (or cost) function the k-means algorithm tries to minimise. What can you say about the objective function's value during the algorithm iteration?
+ 
+### Task c
+
+Consider the following toy data set:  
+
+```{r, fig.height=4, fig.width=4, fig.align="center", echo=FALSE}
+set.seed(42)
+data <- data.frame(x = c(0, 1, 4, 5, 5), y = c(1, 2, 5, 3, 4))
+plot(c(0, 5), c(0, 5), type = "n", xlab = expression(x), ylab = expression(y), asp = 1)
+text(data, rownames(data))
+```
+
+where $x_1=(0,1)$, $x_2=(1,2)$, $x_3=(4,5)$, $x_4=(5,3)$, $x_5=(5,4)$.  
+
+Sketch a run of the k-means algorithm using $K=2$ and initial prototype (mean) vectors $\mu_1=(0,2)$ and $\mu_2=(2,0)$: draw the data points, cluster prototype vectors, and cluster boundary after each iteration until convergence. At each iteration, write down the calculation procedure and report the cluster memberships and the prototype vectors. 
+
+
+\newpage
+
+## Problem 18
+
+*[9 points]*
+
+*Objectives: understanding hierarchical clustering algorithms*
+
+In this problem, you will apply *hierarchical clustering* on a toy data set. You should be able to do this problem with a pen and paper.
+The toy data are shown below in a table and a figure.
+
+```{r echo=FALSE}
+data2 <- data.frame(
+  x = c(0.5, 2.5, 4.2, 5.5, 4.8, 7.0, 8.5),
+  y = c(2.0, 3.0, 0.7, 0.3, 3.5, 2.5, 2.8)
+)
+rownames(data2) <- seq_along(data2$x)
+```
+
+```{r, fig.height=4, fig.width=4, fig.align="center", echo=FALSE}
+knitr::kable(t(data2), row.names = TRUE)
+plot(data2, type = "n", xlab = "x", ylab = "y", asp = 1)
+text(data2, rownames(data2))
+```
+
+We show the pairwise Euclidean distances between the data points in the table below.
+```{r,echo=FALSE}
+knitr::kable(as.matrix(dist(data2)), row.names = TRUE, digits = 2)
+```
+
+
+### Task a
+
+Sketch a run of the basic agglomerative hierarchical clustering algorithm. Use the *single link (min)* notion of dissimilarity between clusters. 
+Use the above figure in your answer sheet to indicate step-by-step how the algorithm forms clusters. 
+Visualise the result as a dendrogram. You don't need to show detailed calculations but indicate the cost of the join you select. 
+
+### Task b 
+
+Repeat Task a using the *complete link (max)* dissimilarity. Compare the results.
+
+
+\newpage
+
+## Problem 19
+
+*[9 points]* 
+
+*Objectives: practical application of k-means and hierarchical clustering*
+
+For this problem, you will apply clustering on the term project dataset (`npf_train.csv`). 
+
+We will use only the real-valued mean measurements (variable names ending with `.mean`) and the class variable (`class4`), resulting in 50+1 data columns. Unless otherwise instructed, scale the variables to zero mean and unit variance.
+
+```{r echo=FALSE}
+# The R code to produce the data is given below for reference.
+npf <- read.csv("npf_train.csv")
+## choose variables whose names end with ".mean" together with "class4"
+vars <- colnames(npf)[sapply(
+  colnames(npf),
+  function(s) nchar(s) > 5 && substr(s, nchar(s) - 4, nchar(s)) == ".mean"
+)]
+npf <- npf[, c(vars, "class4")]
+## strip the trailing ".mean" to make the variable names prettier
+colnames(npf)[1:length(vars)] <- sapply(
+  colnames(npf)[1:length(vars)],
+  function(s) substr(s, 1, nchar(s) - 5)
+)
+vars <- colnames(npf)[1:length(vars)]
+```
+
+### Task a
+
+You can use a library function such as `kmeans` in R or `KMeans` in `scikit-learn`. Cluster the rows of the data matrix. Plot the k-means loss as a function of the number of clusters from 1 to 20.
+
+Should you normalise the columns? What effect does the normalisation of the columns have? 
+
+### Task b
+
+Using Lloyd's algorithm and scaled variables, cluster the rows into four clusters and make a confusion matrix (contingency table where the rows are the actual classes, columns the cluster indices, and entries the counts of rows). Order the rows and columns so that the sum of diagonal entries in your contingency table is maximised (see the Instructions below). 
+
+Where are most "errors" made if you use your clusters as a rudimentary classifier (i.e., if you associate each cluster with a class)? See the hint below! 
+
+### Task c
+
+(i) Repeat the clustering of Task b with 1000 different random initialisations, make a histogram of the losses, and then answer the following:   
+
+    - What are the minimum and maximum k-means losses for your 1000 random initialisations? 
+    - How many initialisations would you expect to have to obtain one reasonably good loss for this dataset and number of clusters? A reasonably good loss here is a solution with a loss within 1% of the best loss out of your 1000 losses.
+
+(ii) Repeat (i) using a smarter initialisation, such as kmeans++. Discuss how this initialisation affected your results. 
+
+### Task d 
+
+(i) Cluster the same data with agglomerative hierarchical clustering using two different linkage functions. Produce a dendrogram and the corresponding flat clustering (e.g., by splitting the dendrogram with `cutree` in R). 
+
+(ii) Compare their properties. For example, you can compare the sizes of clusters by looking at confusion matrices. 
+
+(iii) Find and report at least one interesting feature or reproduce some properties of hierarchical clustering discussed in the lecture (e.g., differences between the linkage functions). 
+*Hint*: See Sect. 12.5.3 of James et al. for examples in R.
+
+### Instructions and hints
+
+In R, you can run Lloyd's algorithm with one random initialisation on a scaled dataset as follows: 
+```{r, eval=FALSE}
+# R
+cl <- kmeans(scale(npf[, vars]), centers = 4, algorithm = "Lloyd", nstart = 1, iter.max = 100)
+```
+
+In Python [`KMeans`](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html) from `sklearn.cluster` uses kmeans++ as the default initialisation. To get random initialisation use `init="random"`:
+
+```{python, eval=FALSE}
+# Python
+from sklearn.cluster import KMeans
+cl = KMeans(n_clusters = 4, n_init = 1, init="random").fit(npf[vars])
+```
+
+In Task b, you need to combine the class variables and the cluster indices; in Task d, you must compare clusterings. Because all permutations of cluster indices are equally good, finding the best match between the known classes (`class4`) and the cluster indices is helpful. One way to do this is the [Hungarian algorithm](https://en.wikipedia.org/wiki/Hungarian_algorithm) which finds a permutation of cluster indices that maximises the sum of the diagonal entries in the confusion matrix. We give an example in R below, using `solve_LSAP` from the `clue` library.
+
+```{r, eval=FALSE}
+# R
+library(clue)
+## Create confusion matrix between the known classes (class 4) and cluster indices.
+tt <- table(npf$class4, cl$cluster)
+## Find a permutation of cluster indices that best matches the classes in class4.
+tt <- tt[, solve_LSAP(tt, maximum = TRUE)]
+```
+
+In Scipy, you can use  [`linear_sum_assignment`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linear_sum_assignment.html) from `scipy.optimize`.
+
+```{python, eval=FALSE}
+# Python
+from scipy.optimize import linear_sum_assignment
+tt = pd.DataFrame({"class": npf.class4, "cluster": cl.labels_})
+tt = tt.groupby(["class", "cluster"]).size().unstack()
+lsa = linear_sum_assignment(tt, maximize = True)
+pairs = {tt.index[i]: tt.columns[j] for i, j in zip(*lsa)}
+```
+
+In R, you can use the following function to use the kmeans++ algorithm to find the initial cluster centroids. You can give the resulting centroids directly as a parameter to the `kmeans` function (parameter `centers`).
+
+```{r,eval=FALSE}
+# R
+
+#' Find initial kmeans++ centroids
+#'
+#' Reference: Arthur & Vassilivitskii (2007) k-means++: the
+#' advantages of careful seeding. In Proc SODA '07, 1027-1035.
+#'
+#' @param x numeric matrix, rows correspond to data items
+#' @param k integer, number of clusters
+#'
+#' @return a matrix of cluster centroids, which can be fed to `kmeans`
+kmeansppcenters <- function(x, k) {
+  x <- as.matrix(x)
+  n <- nrow(x)
+  centers <- matrix(NA, k, ncol(x))
+  p <- rep(1 / n, n)
+  for (i in 1:k) {
+    centers[i, ] <- x[sample.int(n, size = 1, prob = p), ]
+    dd <- rowSums((x - (rep(1, n) %o% centers[i, ]))^2)
+    d <- if (i > 1) pmin(d, dd) else dd
+    if (max(d) > 0) {
+      p <- d / sum(d)
+    }
+  }
+  centers
+}
+
+cl <- kmeans(scale(npf[, vars]),
+  centers = kmeansppcenters(scale(npf[, vars]), 4), algorithm = "Lloyd", iter.max = 100
+)
+```
+
+In Python, [`KMeans`](https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html) from `sklearn.cluster` uses kmeans++ as the default initialisation.
+
+
+\newpage
+
+## Problem 20
+
+*[9 points]*
+
+*Objectives: uses of PCA*
+
+In this problem, you will apply Principal Component Analysis (PCA) on the same dataset as in the problem above (`npf_train.csv`).
+
+### Task a
+
+Compute and show a PCA projection of the data into two dimensions. Indicate the class index (`class4`), by colour and the glyph's shape. Remember to include a legend that indicates which colour/shape corresponds to which class.
+
+### Task b
+
+(i) Compute and plot the proportion of variance explained, and the cumulative variances explained for the principal components. 
+
+(ii) Study the effects of different normalisations. Compare the difference between not scaling the data and normalising each variable to zero mean and unit variance. 
+Why does it seem for unnormalised data that fewer components explain a large proportion of the variance compared to the normalised data? (Hint: See Sect. 12.2.4 of James et al.)
+
+### Task c 
+
+Pick one classification algorithm that would work with this data and choose one of the challenge performance measures (binary accuracy, multiclass accuracy, or perplexity). Split the data at random into training and validation sets of equal sizes. 
+
+(i) Train your classification algorithm without the dimensionality reduction on the training set and report your chosen performance measure on the validation set. 
+
+(i) Do the same on the data after reducing the dimensionality with PCA (see Task b above). How does the performance of your classifier vary with the (reduced) dimensionality? Is there an "optimal" dimensionality which gives you the best performance on the validation set?
+
+*Hint*: Notice that you can do PCA on the combined training and validation sets; this is a simple form of semi-supervised learning: you utilise the structure of the validation/test set even if you don't know the class labels!
+
+
+
+### Task d (optional)
+
+*This is a bonus task for which no points are awarded.*
+
+Repeat the task a above, but this time with isometric multidimensional scaling (MDS) and 
+t-distributed stochastic neighbour embedding (t-SNE).
+
+If you use R, you can use `isoMDS` from library `MASS` and `tsne` from library `tsne`. Notice that neither MDS nor t-SNE algorithms are guaranteed to converge to a local optimum. Therefore, a good initial position is essential (one common choice is the PCA solution).
+
+```{r, eval=FALSE}
+# R
+library(MASS)
+library(tsne)
+d <- dist(scale(npf[, vars]))
+## cmdscale essentially does PCA. Both MDS and t-SNE are sensitive to initial
+## configuration and the PCA initialisation generally leads to reasonable convergence.
+## (Even though R isoMDS and tsne can handle bad initial config fine,
+## we are being explicit here.)
+y <- cmdscale(d, 2)
+## isometric MDS embedding coordinates
+x.mds <- isoMDS(d, y = y)$points
+## t-SNE embedding coordinates
+x.tsne <- tsne(d, initial_config = y, k = 2)
+```
+
+In Python, you can use `MDS` and `TSNE` from `sklearn.manifold`:
+
+```{python, eval=FALSE}
+from sklearn.manifold import MDS, TSNE
+x_mds = MDS().fit_transform(npf[vars])
+x_tsne = TSNE(init="pca").fit_transform(npf[vars])
+```
+
+
+\newpage
+
+## Problem 21
+
+*[2 points]*
+
+*Objectives: self-reflection, giving feedback on the course*
+
+### Tasks
+
+* Write a learning diary of the topics of lectures 9-12 and this exercise set.
+
+### Instructions 
+
+**Guiding questions:** What did I learn? What did I not understand? Was there something relevant for other studies or (future) work? The length of your reply should be 1-3 paragraphs of text. 
+
+
+\newpage
+
+# Exercise Set 3 - schedule
+
+In this document, you can find a suggested schedule to do Exercise Set 3 (E3). The purpose of this document is to help you plan your studies. 
+
+We assume you follow the lectures and read the textbook sections before each class.
+
+It is not possible to grant extensions to the E3 answer deadline. You must submit your answer in time to retain the answer points and the peer review points. Therefore, please submit your solutions after you have already solved some problems. It is possible to update your submission in Moodle until the deadline. This way, you will not lose all points due to some last-minute internet or pdf conversion problems.
+
+If difficult tasks take lots of time, I suggest you first solve the easier problems and only attempt to do the more time-consuming ones. Also, remember that you can get full exercise points even if you do not solve all problems or tasks, so it is not necessary to have perfect solutions to all tasks. Often a non-perfect solution is better than no solution at all. You can ask for advice in Slack or the exercise sessions. 
+
+*Wednesday 30 November.* Lecture on clustering. 
+
+*After 30 November and before 2 December lecture:* do **Problems 17-19** on clustering.
+
+*Friday 2 December.* Lecture on dimensionality reduction.
+
+*After 2 December and before 7 December lecture:* do **Problem 20** on dimensionality reduction.
+
+(You can attend the 5 December exercise workshop, which is mainly about peer review of E2, but you can also ask about E3.)
+
+*Wednesday 7 December.* Lecture on ensemble classifiers and support vector machines. Recap.
+
+(During this week, you can focus on the term project.)
+
+*Friday 9 December.* ML guest lectures.
+
+
+
