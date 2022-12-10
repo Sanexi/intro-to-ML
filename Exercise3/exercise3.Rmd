@@ -1,11 +1,12 @@
 ---
-title: "Exercise Set 2"
+title: "Exercise Set 3"
 output: pdf_document
 ---
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning=FALSE}
 library("reticulate")
 rmarkdown::render
 knitr::knit_engines$set(python = reticulate::eng_python)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 #tinytex::install_tinytex()
 ```
 
@@ -97,6 +98,8 @@ npf['class4'] = npf['class4'].cat.codes
 Plotting:
 ```{python}
 from sklearn.cluster import KMeans
+import warnings
+warnings.filterwarnings('ignore')
 
 toplotY_un = []
 toplotX_un = []
@@ -127,7 +130,7 @@ import seaborn as sns
 
 km = KMeans(n_clusters=4).fit(scaled)
 y_pred = km.predict(scaled)
-y_true = training_set['class4']
+y_true = npf['class4']
 
 cm = confusion_matrix(y_true, y_pred)
 
@@ -138,3 +141,158 @@ plt.show()
 ```
 
 From this matrix it's pretty clear that the most errors happen were the values outside the diagonal are higher. This is particularly true for the last row: the first, second and third values are in fact wrong "predictions" with a really high count.
+
+### Task c
+
+```{python}
+import sys
+
+toplotX = []
+toplotY = []
+min = float('inf')
+max = 0
+
+for i in range(1, 1001):
+    km = KMeans(n_clusters=4, init='random').fit(scaled)
+    l = -1*km.score(scaled)
+    toplotY.append(l)
+    toplotX.append(i)
+    if l < min:
+        min = l
+    if l > max:
+        max = l
+    sys.stdout.flush()
+```
+
+```{python}
+plt.clf()
+plt.hist(toplotY)
+plt.show()
+print(min, max)
+
+```
+
+The minimum loss I got was $11264.182193382203$, and the maximum $11290.868518678522$. The minimum and the maximum are close to each other so optimal result could be achieved with only a small amount of executions.
+
+
+## Problem 20
+
+### Task a
+
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn import preprocessing
+import matplotlib.pyplot as plt
+
+def change_lab(x):
+    if x == 'nonevent': return 0
+    if x == 'Ia': return 1
+    if x == 'Ib': return 2
+    return 3
+
+npf = pd.read_csv('npf_train.csv')
+del npf['id']
+del npf['partlybad']
+del npf['date']
+npf['class4'] = npf['class4'].apply(lambda x: change_lab(x))
+
+
+scaled = preprocessing.scale(npf[npf.columns.difference(['class4'])])
+
+X = npf[npf.columns.difference(['class4'])]
+y = npf['class4']
+    
+```
+
+```{python}
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+def biplot(score,coeff,labels=None):
+    xs = score[:,0]
+    ys = score[:,1]
+    n = coeff.shape[0]
+    scalex = 1.0/(xs.max() - xs.min())
+    scaley = 1.0/(ys.max() - ys.min())
+    plt.scatter(xs * scalex,ys * scaley, c = y, s=5)
+    for i in range(n):
+        plt.arrow(0, 0, coeff[i,0], coeff[i,1],color = 'r',alpha = 0.5)
+        if labels is None:
+            plt.text(coeff[i,0]* 1.15, coeff[i,1] * 1.15, "Var"+str(i+1), color = 'g', ha = 'center', va = 'center')
+        else:
+            plt.text(coeff[i,0]* 1.15, coeff[i,1] * 1.15, labels[i], color = 'g', ha = 'center', va = 'center')
+    plt.xlim(-0.5,0.75)
+    plt.ylim(-.75,.75)
+    plt.xlabel("PC{}".format(1))
+    plt.ylabel("PC{}".format(2))
+    plt.grid()   
+
+model = PCA()
+x_new = model.fit_transform(X)
+
+plt.figure(figsize=(10,10))
+biplot(x_new[:,0:2],np.transpose(model.components_[0:2, :]))
+plt.show()
+```
+
+Purple points are `nonevent`, green are `Ia`, yellow are `Ib` and blue are `II`.
+
+### Task b
+
+```{python}
+plt.clf()
+x = []
+y_down = []
+y_up = []
+sum = 0
+
+pca = model.fit(X)
+
+for i in range(10):
+    x.append(str(i+1))
+    y_down.append(pca.explained_variance_ratio_[i])
+    sum += pca.explained_variance_ratio_[i]
+    y_up.append(sum)
+
+sns.set(rc={'figure.figsize':(9,6)})
+plt.plot(x,y_up, label='Cumulative percentage')
+plt.plot(x, y_down, label='Percentage')
+plt.legend()
+plt.show()
+```
+
+```{python}
+plt.clf()
+x = []
+y_down = []
+y_up = []
+sum = 0
+
+x_scaled = preprocessing.scale(X)
+
+pca = model.fit(x_scaled)
+
+for i in range(30):
+    x.append(str(i+1))
+    y_down.append(pca.explained_variance_ratio_[i])
+    sum += pca.explained_variance_ratio_[i]
+    y_up.append(sum)
+
+sns.set(rc={'figure.figsize':(9,6)})
+plt.plot(x,y_up, label='Cumulative percentage')
+plt.plot(x, y_down, label='Percentage')
+plt.legend()
+plt.show()
+```
+
+In the two scenarios, the changes in the curves are as expected: when the data is not scaled, the first 2/3 features explain most of the variance, while almost all of the variance is explained by the first 30 features when the data is scaled. The high variance of the initial variables in the dataset leads to a significant amount of variance being explained by them. After scaling to a zero mean and unit variance, the variance explained by these variables decreases due to the scaling itself.
+
+
+## Problem 21
+
+I learned about various techniques for unsupervised learning, including clustering, dimensionality reduction, and ensemble methods. I also learned about random forest and support vector machines (SVMs) and how they can be used for classification tasks.
+
+There were a few concepts that I did not fully understand, such as the exact details of how PCA works. I will need to spend more time studying this topics in order to gain a deeper understanding.
+
+Overall, the lectures were very relevant for other studies and future work in the field of machine learning. I, once again, gained a better understanding of how to apply these techniques to different datasets and how to evaluate the performance of the models that I build.
